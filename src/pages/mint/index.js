@@ -97,7 +97,7 @@ function Mint() {
             }}
           >
             <img src={userIcon} alt="" srcset="" />
-            <Typography>Bueno Tutorial</Typography>
+            <Typography>Mint Page Title</Typography>
             <Typography>Created by User</Typography>
           </Grid>
           <Grid
