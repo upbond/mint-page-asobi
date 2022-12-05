@@ -4,11 +4,16 @@ import { Button, Modal, Box, Typography, Grid, TextField } from "@mui/material";
 import { useCustomAuth } from "utils/customAuth";
 import { useMetaMask } from "metamask-react";
 import { metamaskIcon, upbondIcon, userIcon } from "assets";
-import { minting } from "utils/mint";
+import { mintNft } from "utils/nft";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { Blocks } from "react-loader-spinner";
 
+const { REACT_APP_IPFS_URL, REACT_APP_EVENT_ID } = process.env;
 function Mint() {
   const { logout, loginEmbed, acc } = useCustomAuth();
-  const { status, connect, account, chainId, ethereum, switchChain } = useMetaMask();
+  const { status, connect, account, chainId, ethereum, switchChain } =
+    useMetaMask();
 
   const [open, setOpen] = useState(false);
   const [theAccount, setTheAccount] = useState(account);
@@ -16,6 +21,10 @@ function Mint() {
   const [currentWallet, setCurrentWallet] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [currentChain, setCurrentChain] = useState(null);
+  const [imgUrl, setImgUrl] = useState(userIcon);
+  const [eventData, setEventData] = useState({});
+  const [loadingMint, setLoadingMint] = useState(false);
+  const [desc, setDesc] = useState("");
 
   const isMetaMaskInstalled = () => {
     const { ethereum } = window;
@@ -55,8 +64,33 @@ function Mint() {
     }
   }, [status]);
 
-  console.log(acc, "@35");
-  console.log(currentWallet, "@cw");
+  useEffect(() => {
+    init();
+  }, []);
+
+  useEffect(() => {
+    console.log(acc, "@71");
+  }, [acc]);
+
+  const init = async () => {
+    try {
+      const getEventData = await axios.get(
+        REACT_APP_IPFS_URL + `?eventId=${REACT_APP_EVENT_ID}`
+      );
+      console.log(getEventData, "@70");
+      const { data } = getEventData;
+      setEventData(data);
+      // setImgUrl(data.metadata.image.replace(
+      //   "ipfs://",
+      //   "https://cloudflare-ipfs.com/ipfs/"
+      // ));
+      // setTitle(data.metadata.name);
+      document.title = data.metadata.name;
+      // setDesc(data.metadata.description);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
@@ -72,7 +106,7 @@ function Mint() {
             srcset=""
           />
           <Typography sx={{ display: "flex", alignItems: "center" }}>
-            ASOBI
+            Pairme
           </Typography>
         </Box>
         <Grid
@@ -96,9 +130,9 @@ function Mint() {
               padding: "2rem",
             }}
           >
-            <img src={userIcon} alt="" srcset="" />
-            <Typography>Mint Page Title</Typography>
-            <Typography>Created by User</Typography>
+            <img width="384" height="256" src={imgUrl} alt="" srcset="" />
+            {/* <Typography>{title}</Typography> */}
+            <Typography>{desc}</Typography>
           </Grid>
           <Grid
             // xs={12}
@@ -124,7 +158,7 @@ function Mint() {
                 justifyContent: "space-evenly",
               }}
             >
-              {currentChain === "0x5" ? (
+              {currentChain === "0x13881" ? (
                 <>
                   <Box
                     sx={{
@@ -310,12 +344,60 @@ function Mint() {
                           },
                         }}
                         className="button"
-                        onClick={() => {
-                          if (currentWallet === "upbond") minting(acc, quantity);
-                          if (currentWallet === "metamask") minting(account, quantity);
+                        onClick={async () => {
+                          setLoadingMint(true);
+                          if (currentWallet === "upbond") {
+                            const res = await mintNft([acc], currentWallet);
+                            if (res === "err") {
+                              Swal.fire({
+                                icon: "error",
+                                title: "Oops...",
+                                text: "Something went wrong!",
+                              });
+                            } else {
+                              Swal.fire({
+                                icon: "success",
+                                title:
+                                  "NFT Succesfully minted, You may check the transaction in block explorer.",
+                                showConfirmButton: false,
+                                footer: `<a href='https://mumbai.polygonscan.com/tx/${res.transactionHash}' target="_blank">Go to Block Explorer</a>`
+                              });
+                            }
+                            setLoadingMint(false);
+                          }
+                          if (currentWallet === "metamask") {
+                            const res = await mintNft([account], currentWallet);
+                            if (res === "err") {
+                              Swal.fire({
+                                icon: "error",
+                                title: "Oops...",
+                                text: "Something went wrong!",
+                              });
+                            } else {
+                              Swal.fire({
+                                icon: "success",
+                                title:
+                                "NFT Succesfully minted, You may check the transaction in block explorer",
+                                showConfirmButton: false,
+                                footer: `<a href='https://mumbai.polygonscan.com/tx/${res.transactionHash}' target="_blank">Go to Block Explorer</a>`
+                              });
+                            }
+                            setLoadingMint(false);
+                          }
                         }}
                       >
-                        Mint
+                        {loadingMint ? (
+                          <Blocks
+                            visible={true}
+                            height="25"
+                            width="30"
+                            ariaLabel="blocks-loading"
+                            wrapperStyle={{}}
+                            wrapperClass="blocks-wrapper"
+                          />
+                        ) : (
+                          "Mint"
+                        )}
                       </Button>
                     ) : (
                       <Button
@@ -338,11 +420,16 @@ function Mint() {
               ) : (
                 <>
                   <span>
-                    Please switch your network to Goerli 
-                    <Button sx={{ border: "1px solid blue", marginLeft: ".5rem" }} onClick={() => {
-                      switchChain("0x5")
-                      setCurrentWallet("metamask")
-                    }}>Switch to Goerli</Button>
+                    Please switch your network to Mumbai Polygon
+                    <Button
+                      sx={{ border: "1px solid blue", marginLeft: ".5rem" }}
+                      onClick={() => {
+                        switchChain("0x13881");
+                        setCurrentWallet("metamask");
+                      }}
+                    >
+                      Switch to Mumbai Polygon
+                    </Button>
                   </span>
                 </>
               )}

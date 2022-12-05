@@ -28,7 +28,7 @@ const {
 //   REACT_APP_LOGIN_DOMAIN,
   REACT_APP_GOERLI_RPC,
 //   REACT_APP_TORUS_CLIENTID,
-//   REACT_APP_POLYGON_PROVIDER,
+  REACT_APP_POLYGON_PROVIDER,
 //   REACT_APP_TORUS_NETWORK,
 
 //   REACT_APP_HANKYU_NFT,
@@ -115,9 +115,9 @@ export const CustomAuthProvider = ({ children, web3AuthNetwork, chain }) => {
         usingDirect: false,
         network: {
         //   host: "https://polygon-mumbai.infura.io/v3/74a97bae118345ecbadadaaeb1cf4a53", // mandatory
-          host: REACT_APP_GOERLI_RPC, // mandatory
-          chainId: 5, // optional
-          networkName: "Goerli Network", // optional
+          host: REACT_APP_POLYGON_PROVIDER, // mandatory
+          chainId: 80001, // mandatory
+          networkName: "Mumbai Network", // optional
         },
         dappRedirectUri: `${window.location.origin}/login`,
         enableLogging: true,
